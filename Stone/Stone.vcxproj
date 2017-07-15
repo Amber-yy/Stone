@@ -142,6 +142,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ASTree.cpp" />
+    <ClCompile Include="Lexer.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="Reader.cpp" />
+    <ClCompile Include="Token.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="ASTree.h" />
+    <ClInclude Include="Lexer.h" />
+    <ClInclude Include="Reader.h" />
+    <ClInclude Include="Token.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
