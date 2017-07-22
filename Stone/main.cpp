@@ -6,31 +6,31 @@
 
 int main()
 {
-	try
-	{
-		Lexer lexer;
-		std::ifstream ifs("data.txt");
-		lexer.load(ifs);
-		while (true)
-		{
-			auto str = std::move(lexer.read());
-			
-			if (*str == Token::eof)
-			{
-				break;
-			}
+	//try
+	//{
+	//	Lexer lexer;
+	//	std::ifstream ifs("data.txt");
+	//	lexer.load(ifs);
+	//	while (true)
+	//	{
+	//		auto str = std::move(lexer.read());
+	//		
+	//		if (*str == Token::eof)
+	//		{
+	//			break;
+	//		}
 
-			if (str->getText() == Token::eol)
-			{
-				continue;
-			}
+	//		if (str->getText() == Token::eol)
+	//		{
+	//			continue;
+	//		}
 
-			std::cout << str->getText() << '\n';
-		}
-	}
-	catch (std::exception &e)
-	{
-		std::cout << e.what();
-	}
+	//		std::cout << str->getText() << '\n';
+	//	}
+	//}
+	//catch (std::exception &e)
+	//{
+	//	std::cout << e.what();
+	//}
 	return 0;
 }
