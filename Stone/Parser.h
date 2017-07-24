@@ -8,7 +8,6 @@
 
 class Parser;
 using ParserRef = std::shared_ptr<Parser>;
-using ParserP = Parser *;
 
 class Operator;
 
@@ -31,25 +30,25 @@ public:
 	virtual ASTreeRef parse(Lexer &lexer);
 	virtual bool match(Lexer &lexer);
 	virtual ~Parser();
-	virtual ParserP reset();
-	virtual ParserP reset(ASTreeRef ref);
-	virtual ParserP number(ASTreeRef ref);
-	virtual ParserP identifier(std::set<std::string>& reserved);
-	virtual ParserP identifier(ASTreeRef ref, std::set<std::string>& reserved);
-	virtual ParserP string();
-	virtual ParserP string(ASTreeRef ref);
-	virtual ParserP token(const std::vector<std::string>& pat);
-	virtual ParserP sep(const std::vector<std::string> &pat);
-	virtual ParserP ast(ParserRef ref);
-	virtual ParserP or (const std::vector<ParserRef>& p);
-	virtual ParserP maybe(ParserRef ref);
-	virtual ParserP option(ParserRef ref);
-	virtual ParserP repeat(ParserRef ref);
-	virtual ParserP expression(ParserRef subexp, Operator &operators);
-	virtual ParserP expression(ASTreeRef ref, ParserRef subexp, Operator &operators);
-	virtual ParserP insertChoice(ParserRef p);
-	static ParserP rule();
-	static ParserP rule(ASTreeRef ref);
+	virtual ParserRef reset();
+	virtual ParserRef reset(ASTreeRef ref);
+	virtual ParserRef number(ASTreeRef ref);
+	virtual ParserRef identifier(std::set<std::string>& reserved);
+	virtual ParserRef identifier(ASTreeRef ref, std::set<std::string>& reserved);
+	virtual ParserRef string();
+	virtual ParserRef string(ASTreeRef ref);
+	virtual ParserRef token(const std::vector<std::string>& pat);
+	virtual ParserRef sep(const std::vector<std::string> &pat);
+	virtual ParserRef ast(ParserRef ref);
+	virtual ParserRef or (const std::vector<ParserRef>& p);
+	virtual ParserRef maybe(ParserRef ref);
+	virtual ParserRef option(ParserRef ref);
+	virtual ParserRef repeat(ParserRef ref);
+	virtual ParserRef expression(ParserRef subexp, Operator &operators);
+	virtual ParserRef expression(ASTreeRef ref, ParserRef subexp, Operator &operators);
+	virtual ParserRef insertChoice(ParserRef p);
+	static ParserRef rule();
+	static ParserRef rule(ASTreeRef ref);
 protected:
 	struct parserData;
 	std::unique_ptr<parserData> data;

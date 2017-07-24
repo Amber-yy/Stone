@@ -4,8 +4,11 @@
 #include <iostream>
 #include <fstream>
 
+#include <memory>
+
 int main()
 {
+
 	//try
 	//{
 	//	Lexer lexer;

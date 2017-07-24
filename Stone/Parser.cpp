@@ -58,6 +58,7 @@ struct Parser::parserData
 {
 	std::vector<ElementRef> elements;
 	FactoryRef factory;
+	std::weak_ptr<Parser> creator;
 };
 
 Parser::Parser()
@@ -104,101 +105,101 @@ Parser::~Parser()
 {
 }
 
-ParserP Parser::reset()
+ParserRef Parser::reset()
 {
 	return reset(ASTreeRef());
 }
 
-ParserP Parser::reset(ASTreeRef ref)
+ParserRef Parser::reset(ASTreeRef ref)
 {
 	data->elements.clear();
 	data->factory = std::make_shared<Factory>(ref);
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::number(ASTreeRef ref)
+ParserRef Parser::number(ASTreeRef ref)
 {
 	data->elements.push_back(std::make_shared<NUMToken>(ref));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::identifier(std::set<std::string>& reserved)
+ParserRef Parser::identifier(std::set<std::string>& reserved)
 {
 	return identifier(ASTreeRef(), reserved);
 }
 
-ParserP Parser::identifier(ASTreeRef ref, std::set<std::string>& reserved)
+ParserRef Parser::identifier(ASTreeRef ref, std::set<std::string>& reserved)
 {
 	data->elements.push_back(std::make_shared<IDToken>(ref, reserved));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::string()
+ParserRef Parser::string()
 {
 	return string(ASTreeRef());
 }
 
-ParserP Parser::string(ASTreeRef ref)
+ParserRef Parser::string(ASTreeRef ref)
 {
 	data->elements.push_back(std::make_shared<STRToken>(ref));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::token(const std::vector<std::string>& pat)
+ParserRef Parser::token(const std::vector<std::string>& pat)
 {
 	data->elements.push_back(std::make_shared<Leaf>(pat));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::sep(const std::vector<std::string>& pat)
+ParserRef Parser::sep(const std::vector<std::string>& pat)
 {
 	data->elements.push_back(std::make_shared<Skip>(pat));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::ast(ParserRef ref)
+ParserRef Parser::ast(ParserRef ref)
 {
 	data->elements.push_back(std::make_shared<Tree>(ref));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser:: or (const std::vector<ParserRef>& p)
+ParserRef Parser:: or (const std::vector<ParserRef>& p)
 {
 	data->elements.push_back(std::make_shared<OrTree>(p));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::maybe(ParserRef ref)
+ParserRef Parser::maybe(ParserRef ref)
 {
 	ParserRef p2 = std::make_shared<Parser>(*ref.get());
 	data->elements.push_back(std::make_shared<OrTree>(std::vector<ParserRef>({ ref,p2 })));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::option(ParserRef ref)
+ParserRef Parser::option(ParserRef ref)
 {
 	data->elements.push_back(std::make_shared<Repeat>(ref,true));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::repeat(ParserRef ref)
+ParserRef Parser::repeat(ParserRef ref)
 {
 	data->elements.push_back(std::make_shared<Repeat>(ref, false));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::expression(ParserRef subexp, Operator & operators)
+ParserRef Parser::expression(ParserRef subexp, Operator & operators)
 {
 	return expression(ASTreeRef(),subexp,operators);
 }
 
-ParserP Parser::expression(ASTreeRef ref, ParserRef subexp, Operator & operators)
+ParserRef Parser::expression(ASTreeRef ref, ParserRef subexp, Operator & operators)
 {
 	data->elements.push_back(std::make_shared<Expr>(ref, subexp, operators));
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::insertChoice(ParserRef p)
+ParserRef Parser::insertChoice(ParserRef p)
 {
 	ElementRef e = data->elements[0];
 	if (dynamic_cast<OrTree *>(e.get()))
@@ -212,17 +213,21 @@ ParserP Parser::insertChoice(ParserRef p)
 		or (std::vector<ParserRef>({ p, other }));
 	}
 
-	return this;
+	return data->creator.lock();
 }
 
-ParserP Parser::rule()
+ParserRef Parser::rule()
 {
-	return new Parser(ASTreeRef());
+	ParserRef ref = std::make_shared<Parser>(ASTreeRef());
+	ref->data->creator = ref;
+	return ref;
 }
 
-ParserP Parser::rule(ASTreeRef ref)
+ParserRef Parser::rule(ASTreeRef ref)
 {
-	return new Parser(ref);
+	ParserRef p = std::make_shared<Parser>(ref);
+	p->data->creator = p;
+	return p;
 }
 
 Tree::Tree(ParserRef ref)
@@ -339,13 +344,24 @@ Factory::Factory(ASTreeRef &t)
 	{
 		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<NumberLiteral>(token); };
 	}
-	else if (dynamic_cast<ASTList *>(ptr))
+	else if (dynamic_cast<ASTLeaf *>(ptr))
 	{
-		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<ASTList>(std::move(ref)); };
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<ASTLeaf>(token); };
 	}
 	else
 	{
-		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<ASTLeaf>(token); };
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) 
+		{
+			if (ref.size() == 1)
+			{
+				return ref[0];
+			}
+			else
+			{
+				std::shared_ptr<ASTree> t= std::make_shared<ASTList>(ref);
+				return t;
+			}
+		};
 	}
 }
 
