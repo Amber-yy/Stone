@@ -168,6 +168,12 @@ protected:
 	std::unique_ptr<preData> data;
 };
 
+struct Precedence::preData
+{
+	int value;
+	bool left;
+};
+
 class Operator :public std::map<std::string, Precedence>
 {
 public:

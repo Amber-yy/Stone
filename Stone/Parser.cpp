@@ -40,11 +40,6 @@ struct Leaf::leafData
 	std::vector<std::string> tokens;
 };
 
-struct Precedence::preData
-{
-	int value;
-	bool left;
-};
 
 struct Expr::exprData
 {
@@ -372,27 +367,27 @@ Factory::Factory(ASTreeRef &t)
 	}
 	else if (dynamic_cast<PrimaryExpr *>(ptr))
 	{
-		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<PrimaryExpr>(token); };
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<PrimaryExpr>(ref); };
 	}
 	else if (dynamic_cast<NegativeExpr *>(ptr))
 	{
-		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<NegativeExpr>(token); };
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<NegativeExpr>(ref); };
 	}
 	else if (dynamic_cast<BlockStmnt *>(ptr))
 	{
-		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<BlockStmnt>(token); };
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<BlockStmnt>(ref); };
 	}
 	else if (dynamic_cast<IfStmnt *>(ptr))
 	{
-		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<IfStmnt>(token); };
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<IfStmnt>(ref); };
 	}
 	else if (dynamic_cast<WhileStmnt *>(ptr))
 	{
-		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<WhileStmnt>(token); };
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<WhileStmnt>(ref); };
 	}
 	else if (dynamic_cast<NullStmnt *>(ptr))
 	{
-		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<NullStmnt>(token); };
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<NullStmnt>(ref); };
 	}
 	else if(dynamic_cast<ASTList *>(ptr))
 	{
