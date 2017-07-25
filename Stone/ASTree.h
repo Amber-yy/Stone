@@ -42,7 +42,7 @@ protected:
 class ASTList :public ASTree
 {
 public:
-	ASTList(std::vector<ASTreeRef> &&list);
+	ASTList(std::vector<ASTreeRef> &list);
 	virtual ~ASTList();
 	virtual ASTreeRef child(int index) override;
 	virtual int numChildren()override;
@@ -73,9 +73,61 @@ public:
 class BinaryExpr :public ASTList
 {
 public:
-	BinaryExpr(std::vector<ASTreeRef> &&list);
+	BinaryExpr(std::vector<ASTreeRef> &list);
 	virtual ~BinaryExpr();
 	virtual ASTreeRef left();
 	virtual std::string op();
 	virtual ASTreeRef right();
+};
+
+class PrimaryExpr :public ASTList
+{
+public:
+	PrimaryExpr(std::vector<ASTreeRef> &ref);
+};
+
+class NegativeExpr :public ASTList
+{
+public:
+	NegativeExpr(std::vector<ASTreeRef> &ref);
+	ASTreeRef operand();
+	virtual std::string toString()override;
+};
+
+class BlockStmnt :public ASTList
+{
+public:
+	BlockStmnt(std::vector<ASTreeRef> &ref);
+};
+
+class IfStmnt :public ASTList
+{
+public:
+	IfStmnt(std::vector<ASTreeRef> &ref);
+	virtual ASTreeRef condition();
+	virtual ASTreeRef thenBlock();
+	virtual ASTreeRef elseBlock();
+	virtual std::string toString()override;
+};
+
+class WhileStmnt :public ASTList
+{
+public:
+	WhileStmnt(std::vector<ASTreeRef> &ref);
+	virtual ASTreeRef condition();
+	virtual ASTreeRef body();
+	virtual std::string toString()override;
+};
+
+class NullStmnt :public ASTList
+{
+public:
+	NullStmnt(std::vector<ASTreeRef> &ref);
+};
+
+class StringLiteral :public ASTLeaf
+{
+public:
+	StringLiteral(TokenRef t);
+	virtual std::string value();
 };

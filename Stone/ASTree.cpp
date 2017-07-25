@@ -67,7 +67,7 @@ TokenRef ASTLeaf::token()
 	return data->token;
 }
 
-ASTList::ASTList(std::vector<ASTreeRef>&& list)
+ASTList::ASTList(std::vector<ASTreeRef>& list)
 {
 	data = std::make_unique<listData>();
 	data->children = std::move(list);
@@ -150,7 +150,7 @@ std::string Name::name()
 	return token()->getText();
 }
 
-BinaryExpr::BinaryExpr(std::vector<ASTreeRef>&& list):ASTList(std::move(list))
+BinaryExpr::BinaryExpr(std::vector<ASTreeRef>& list):ASTList(list)
 {
 }
 
@@ -171,4 +171,82 @@ std::string BinaryExpr::op()
 ASTreeRef BinaryExpr::right()
 {
 	return child(1);
+}
+
+PrimaryExpr::PrimaryExpr(std::vector<ASTreeRef>& ref):ASTList(ref)
+{
+}
+
+NegativeExpr::NegativeExpr(std::vector<ASTreeRef>& ref) : ASTList(ref)
+{
+}
+
+ASTreeRef NegativeExpr::operand()
+{
+	return data->children[0];
+}
+
+std::string NegativeExpr::toString()
+{
+	return "-"+operand()->toString();
+}
+
+BlockStmnt::BlockStmnt(std::vector<ASTreeRef>& ref) :ASTList(ref)
+{
+}
+
+IfStmnt::IfStmnt(std::vector<ASTreeRef>& ref) : ASTList(ref)
+{
+}
+
+ASTreeRef IfStmnt::condition()
+{
+	return data->children[0];
+}
+
+ASTreeRef IfStmnt::thenBlock()
+{
+	return data->children[1];
+}
+
+ASTreeRef IfStmnt::elseBlock()
+{
+	return numChildren()>0?data->children[2]:ASTreeRef();
+}
+
+std::string IfStmnt::toString()
+{
+	return "(if " + condition()->toString() + " " + thenBlock()->toString() + " else " + elseBlock()->toString() + ")";
+}
+
+WhileStmnt::WhileStmnt(std::vector<ASTreeRef>& ref) :ASTList(ref)
+{
+}
+
+ASTreeRef WhileStmnt::condition()
+{
+	return data->children[0];
+}
+
+ASTreeRef WhileStmnt::body()
+{
+	return data->children[1];
+}
+
+std::string WhileStmnt::toString()
+{
+	return "(while " + condition()->toString() + " " + body()->toString() + ")";
+}
+
+NullStmnt::NullStmnt(std::vector<ASTreeRef>& ref) :ASTList(ref)
+{
+}
+
+StringLiteral::StringLiteral(TokenRef t):ASTLeaf(t)
+{
+}
+
+std::string StringLiteral::value()
+{
+	return data->token->getText();
 }

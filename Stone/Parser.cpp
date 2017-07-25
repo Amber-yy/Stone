@@ -331,6 +331,24 @@ Factory::Factory(ASTreeRef &t)
 {
 	data = std::make_unique<factoryData>();
 
+	auto function = [](TokenRef &token, std::vector<ASTreeRef>&ref)
+	{
+		if (ref.size() == 1)
+		{
+			return ref[0];
+		}
+		else
+		{
+			std::shared_ptr<ASTree> t = std::make_shared<ASTList>(ref);
+			return t;
+		}
+	};
+
+	if (t.get() == nullptr)
+	{
+		data->maker = function;
+	}
+
 	ASTree *ptr = t.get();
 	if (dynamic_cast<BinaryExpr *>(ptr))
 	{
@@ -344,25 +362,43 @@ Factory::Factory(ASTreeRef &t)
 	{
 		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<NumberLiteral>(token); };
 	}
+	else if (dynamic_cast<StringLiteral *>(ptr))
+	{
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<StringLiteral>(token); };
+	}
 	else if (dynamic_cast<ASTLeaf *>(ptr))
 	{
 		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<ASTLeaf>(token); };
 	}
-	else
+	else if (dynamic_cast<PrimaryExpr *>(ptr))
 	{
-		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) 
-		{
-			if (ref.size() == 1)
-			{
-				return ref[0];
-			}
-			else
-			{
-				std::shared_ptr<ASTree> t= std::make_shared<ASTList>(ref);
-				return t;
-			}
-		};
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<PrimaryExpr>(token); };
 	}
+	else if (dynamic_cast<NegativeExpr *>(ptr))
+	{
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<NegativeExpr>(token); };
+	}
+	else if (dynamic_cast<BlockStmnt *>(ptr))
+	{
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<BlockStmnt>(token); };
+	}
+	else if (dynamic_cast<IfStmnt *>(ptr))
+	{
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<IfStmnt>(token); };
+	}
+	else if (dynamic_cast<WhileStmnt *>(ptr))
+	{
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<WhileStmnt>(token); };
+	}
+	else if (dynamic_cast<NullStmnt *>(ptr))
+	{
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<NullStmnt>(token); };
+	}
+	else if(dynamic_cast<ASTList *>(ptr))
+	{
+		data->maker = function;
+	}
+
 }
 
 ASTreeRef Factory::make(TokenRef &token, std::vector<ASTreeRef>&ref)
