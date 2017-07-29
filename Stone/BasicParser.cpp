@@ -25,6 +25,7 @@ struct BasicParser::basicParserData
 
 BasicParser::BasicParser()
 {
+	data = std::make_unique<basicParserData>();
 	std::vector<ASTreeRef> tempRef;
 
 	data->expr0 = Parser::rule();
@@ -47,9 +48,7 @@ BasicParser::BasicParser()
 	data->statement0 = Parser::rule();
 
 	data->block = Parser::rule(std::make_shared<BlockStmnt>(tempRef))->sep({ "{" })->option(data->statement0)->repeat
-	(
-		Parser::rule()->sep({ ";",Token::eol })->sep({ "else" })->ast(data->block)->sep({"}"})
-	);
+	(Parser::rule()->sep({ ";",Token::eol })->option(data->statement0))->sep({ "}" });
 
 	data->simple = Parser::rule(std::make_shared<PrimaryExpr>(tempRef))->ast(data->expr);
 

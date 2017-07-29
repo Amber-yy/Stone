@@ -94,6 +94,21 @@ Iterator ASTList::children()
 
 std::string ASTList::location()
 {
+	std::string temp;
+	for (ASTreeRef &ref : data->children)
+	{
+		temp = ref->location();
+		if (temp.length())
+		{
+			break;
+		}
+	}
+
+	return temp;
+}
+
+std::string ASTList::toString()
+{
 	std::string temp = "(";
 	std::string sep = "";
 
@@ -107,21 +122,7 @@ std::string ASTList::location()
 	temp += ")";
 
 	return temp;
-}
 
-std::string ASTList::toString()
-{
-	std::string temp;
-	for (ASTreeRef &ref : data->children)
-	{
-		temp = ref->location();
-		if (temp.length())
-		{
-			break;
-		}
-	}
-
-	return temp;
 }
 
 NumberLiteral::NumberLiteral(TokenRef & t):ASTLeaf(t)
@@ -170,7 +171,7 @@ std::string BinaryExpr::op()
 
 ASTreeRef BinaryExpr::right()
 {
-	return child(1);
+	return child(2);
 }
 
 PrimaryExpr::PrimaryExpr(std::vector<ASTreeRef>& ref):ASTList(ref)
@@ -211,7 +212,7 @@ ASTreeRef IfStmnt::thenBlock()
 
 ASTreeRef IfStmnt::elseBlock()
 {
-	return numChildren()>0?data->children[2]:ASTreeRef();
+	return numChildren()>2?data->children[2]:ASTreeRef();
 }
 
 std::string IfStmnt::toString()

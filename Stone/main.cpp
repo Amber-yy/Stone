@@ -6,6 +6,9 @@
 
 #include <memory>
 
+#include "BasicParser.h"
+#include "ASTree.h"
+
 int main()
 {
 
@@ -14,21 +17,13 @@ int main()
 		Lexer lexer;
 		std::ifstream ifs("data.txt");
 		lexer.load(ifs);
-		while (true)
+		
+		BasicParser bp;
+
+		while (*lexer.peek(0) != Token::eof)
 		{
-			auto str = std::move(lexer.read());
-			
-			if (*str == Token::eof)
-			{
-				break;
-			}
-
-			if (str->getText() == Token::eol)
-			{
-				continue;
-			}
-
-			std::cout << str->getText() << '\n';
+			ASTreeRef ref = bp.parse(lexer);
+			std::cout << ref->toString() << '\n';
 		}
 	}
 	catch (std::exception &e)

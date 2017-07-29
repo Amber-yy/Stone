@@ -58,6 +58,7 @@ struct Parser::parserData
 
 Parser::Parser()
 {
+	data = std::make_unique<parserData>();
 }
 
 Parser::Parser(const Parser & p)
@@ -69,7 +70,8 @@ Parser::Parser(const Parser & p)
 
 Parser::Parser(ASTreeRef ref)
 {
-	reset(ref);
+	data = std::make_unique<parserData>();
+	data->factory = std::make_shared<Factory>(ref);
 }
 
 ASTreeRef Parser::parse(Lexer & lexer)
@@ -107,8 +109,6 @@ ParserRef Parser::reset()
 
 ParserRef Parser::reset(ASTreeRef ref)
 {
-	data->elements.clear();
-	data->factory = std::make_shared<Factory>(ref);
 	return data->creator.lock();
 }
 
@@ -215,7 +215,7 @@ ParserRef Parser::rule()
 {
 	ParserRef ref = std::make_shared<Parser>(ASTreeRef());
 	ref->data->creator = ref;
-	return ref;
+	return  ref;
 }
 
 ParserRef Parser::rule(ASTreeRef ref)
@@ -261,6 +261,7 @@ void OrTree::parse(Lexer & lexer, std::vector<ASTreeRef>& res)
 	if (p.get() == nullptr)
 	{
 		//todo:抛出一个语法分析错误
+		printf("error in ortree::parse\n");
 	}
 	else
 	{
@@ -270,7 +271,7 @@ void OrTree::parse(Lexer & lexer, std::vector<ASTreeRef>& res)
 
 bool OrTree::match(Lexer & lexer)
 {
-	return choose(lexer).get()==nullptr;
+	return choose(lexer).get()!=nullptr;
 }
 
 ParserRef OrTree::choose(Lexer & lexer)
@@ -367,7 +368,19 @@ Factory::Factory(ASTreeRef &t)
 	}
 	else if (dynamic_cast<PrimaryExpr *>(ptr))
 	{
-		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) {return std::make_shared<PrimaryExpr>(ref); };
+		data->maker = [](TokenRef &token, std::vector<ASTreeRef>&ref) 
+		{
+			ASTreeRef t;
+			if (ref.size() == 1)
+			{
+				t= ref[0];
+			}
+			else
+			{
+				t= std::make_shared<PrimaryExpr>(ref);
+			}
+			return t;
+		};
 	}
 	else if (dynamic_cast<NegativeExpr *>(ptr))
 	{
@@ -403,6 +416,10 @@ ASTreeRef Factory::make(TokenRef &token, std::vector<ASTreeRef>&ref)
 
 AToken::AToken(ASTreeRef ref)
 {
+	if (ref.get() == nullptr)
+	{
+		ref = std::make_shared<ASTLeaf>(TokenRef());
+	}
 	data = std::make_unique<tokenData>(ref);
 }
 
@@ -417,6 +434,7 @@ void AToken::parse(Lexer & lexer, std::vector<ASTreeRef>& res)
 	else
 	{
 		//todo:语法解析错误
+		printf("error in AToken::parse\n");
 	}
 }
 
@@ -451,7 +469,7 @@ STRToken::STRToken(ASTreeRef ref):AToken(ref)
 
 bool STRToken::test(TokenRef t)
 {
-	return false;
+	return t->isString();
 }
 
 Leaf::Leaf(const std::vector<std::string>& pat)
@@ -482,6 +500,7 @@ void Leaf::parse(Lexer & lexer, std::vector<ASTreeRef>& res)
 	else
 	{
 		//todo，语法分析错误
+		printf("error in Leaf::parse\n");
 	}
 
 }
@@ -495,10 +514,11 @@ bool Leaf::match(Lexer & lexer)
 		{
 			if (token == t->getText())
 			{
-				return false;
+				return true;
 			}
 		}
 	}
+
 	return false;
 }
 
@@ -564,7 +584,7 @@ void Operator::add(std::string name, int prec, bool left)
 Expr::Expr(ASTreeRef ref, ParserRef exp, Operator & op)
 {
 	data = std::make_unique<exprData>(ref);
-	data->op = std::move(op);
+	data->op = std::move(op);//可能有问题
 	data->factor = exp;
 }
 
@@ -612,7 +632,12 @@ Precedence Expr::nextOperator(Lexer & lexer)
 	TokenRef t = lexer.peek(0);
 	if (t->isIdentifier())
 	{
-		return data->op.find(t->getText())->second;
+		auto result = data->op.find(t->getText());
+		if (result != data->op.end())
+		{
+			return result->second;
+		}
+
 	}
 
 	return Precedence();
