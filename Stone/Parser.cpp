@@ -66,6 +66,7 @@ Parser::Parser(const Parser & p)
 	data = std::make_unique<parserData>();
 	data->elements = p.data->elements;
 	data->factory = p.data->factory;
+	data->creator = p.data->creator;
 }
 
 Parser::Parser(ASTreeRef ref)
@@ -104,11 +105,13 @@ Parser::~Parser()
 
 ParserRef Parser::reset()
 {
-	return reset(ASTreeRef());
+	data->elements.clear();
+	return data->creator.lock();
 }
 
 ParserRef Parser::reset(ASTreeRef ref)
 {
+	data->factory = std::make_shared<Factory>(ref);
 	return data->creator.lock();
 }
 
@@ -204,7 +207,7 @@ ParserRef Parser::insertChoice(ParserRef p)
 	else
 	{
 		ParserRef other=std::make_shared<Parser>(*this);
-		reset();
+		reset(ASTreeRef());
 		or (std::vector<ParserRef>({ p, other }));
 	}
 

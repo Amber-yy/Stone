@@ -217,7 +217,13 @@ ASTreeRef IfStmnt::elseBlock()
 
 std::string IfStmnt::toString()
 {
-	return "(if " + condition()->toString() + " " + thenBlock()->toString() + " else " + elseBlock()->toString() + ")";
+	std::string result = "(if " + condition()->toString() + " " + thenBlock()->toString();
+	if (elseBlock().get() != nullptr)
+	{
+		result+= " else " + elseBlock()->toString() + ")";
+	}
+
+	return result;
 }
 
 WhileStmnt::WhileStmnt(std::vector<ASTreeRef>& ref) :ASTList(ref)
@@ -236,7 +242,7 @@ ASTreeRef WhileStmnt::body()
 
 std::string WhileStmnt::toString()
 {
-	return "(while " + condition()->toString() + " " + body()->toString() + ")";
+	return  "(while " + condition()->toString() + " " + body()->toString() + ")";
 }
 
 NullStmnt::NullStmnt(std::vector<ASTreeRef>& ref) :ASTList(ref)
