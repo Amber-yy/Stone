@@ -70,7 +70,7 @@ TokenRef ASTLeaf::token()
 ASTList::ASTList(std::vector<ASTreeRef>& list)
 {
 	data = std::make_unique<listData>();
-	data->children = std::move(list);
+	data->children = list;
 }
 
 ASTList::~ASTList()
@@ -220,8 +220,10 @@ std::string IfStmnt::toString()
 	std::string result = "(if " + condition()->toString() + " " + thenBlock()->toString();
 	if (elseBlock().get() != nullptr)
 	{
-		result+= " else " + elseBlock()->toString() + ")";
+		result+= " else " + elseBlock()->toString() ;
 	}
+
+	result += ")";
 
 	return result;
 }

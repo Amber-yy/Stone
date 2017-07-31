@@ -15,7 +15,7 @@ class Factory final
 {
 public:
 	Factory(ASTreeRef &t);
-	ASTreeRef make(TokenRef &token, std::vector<ASTreeRef>&ref);
+	ASTreeRef make(TokenRef token, std::vector<ASTreeRef>&ref);
 private:
 	struct factoryData;
 	std::unique_ptr<factoryData> data;

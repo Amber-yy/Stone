@@ -28,6 +28,20 @@ BasicParser::BasicParser()
 	data = std::make_unique<basicParserData>();
 	std::vector<ASTreeRef> tempRef;
 
+	data->operators.add("=", 1, false);
+	data->operators.add("==", 2, true);
+	data->operators.add(">", 2, true);
+	data->operators.add("<", 2, true);
+	data->operators.add("+", 3, true);
+	data->operators.add("-", 3, true);
+	data->operators.add("*", 4, true);
+	data->operators.add("/", 4, true);
+	data->operators.add("%", 4, true);
+
+	data->reserved.insert(";");
+	data->reserved.insert("}");
+	data->reserved.insert(Token::eol);
+
 	data->expr0 = Parser::rule();
 	data->primary = Parser::rule(std::make_shared<PrimaryExpr>(tempRef))-> or
 	({ 
@@ -64,20 +78,6 @@ BasicParser::BasicParser()
 		data->statement,
 		Parser::rule(std::make_shared<NullStmnt>(tempRef))->sep({";",Token::eol})
 	});
-
-	data->reserved.insert(";");
-	data->reserved.insert("}");
-	data->reserved.insert(Token::eol);
-
-	data->operators.add("=",1,false);
-	data->operators.add("==", 2, true);
-	data->operators.add(">", 2, true);
-	data->operators.add("<", 2, true);
-	data->operators.add("+", 3, true);
-	data->operators.add("-", 3, true);
-	data->operators.add("*", 4, true);
-	data->operators.add("/", 4, true);
-	data->operators.add("%", 4, true);
 
 }
 

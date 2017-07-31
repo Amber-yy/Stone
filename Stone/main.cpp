@@ -22,6 +22,11 @@ int main()
 
 		while (*lexer.peek(0) != Token::eof)
 		{
+			if (lexer.peek(0)->getText() == Token::eol)
+			{
+				lexer.read();
+				continue;
+			}
 			ASTreeRef ref = bp.parse(lexer);
 			std::cout << ref->toString() << '\n';
 		}
