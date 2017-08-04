@@ -9,13 +9,19 @@
 #include "BasicParser.h"
 #include "ASTree.h"
 
-int main()
+int main(int argc,char **argv)
 {
+	if (argc < 2)
+	{
+		return 0;
+	}
+
+	Enviroment e;
 
 	try
 	{
 		Lexer lexer;
-		std::ifstream ifs("data.txt");
+		std::ifstream ifs(argv[1]);
 		lexer.load(ifs);
 		
 		BasicParser bp;
@@ -28,22 +34,14 @@ int main()
 				continue;
 			}
 			ASTreeRef ref = bp.parse(lexer);
-			std::cout << ref->toString() << '\n';
-		}
 
-		//while (*lexer.peek(0) != Token::eof)
-		//{
-		//	if (lexer.peek(0)->getText() == "\n")
-		//	{
-		//		lexer.read();
-		//		continue;
-		//	}
-		//	std::cout << lexer.read()->getText() << '\n';
-		//}
+			ref->eval(e);
+		}
 	}
 	catch (std::exception &e)
 	{
 		std::cout << e.what();
 	}
+
 	return 0;
 }

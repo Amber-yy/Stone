@@ -1,6 +1,8 @@
 #include "ASTree.h"
 #include "Token.h"
 
+#include <iostream>
+
 struct ASTLeaf::leafData
 {
 	TokenRef token;
@@ -60,6 +62,12 @@ std::string ASTLeaf::location()
 std::string ASTLeaf::toString()
 {
 	return data->token->getText();
+}
+
+Object ASTLeaf::eval(Enviroment & env)
+{
+	//toto,抛出一个运行时错误
+	return Object();
 }
 
 TokenRef ASTLeaf::token()
@@ -125,6 +133,12 @@ std::string ASTList::toString()
 
 }
 
+Object ASTList::eval(Enviroment & env)
+{
+	//todo,抛出一个语法异常
+	return Object();
+}
+
 NumberLiteral::NumberLiteral(TokenRef & t):ASTLeaf(t)
 {
 }
@@ -138,6 +152,13 @@ int NumberLiteral::value()
 	return token()->getNumber();
 }
 
+Object NumberLiteral::eval(Enviroment & env)
+{
+	Object t;
+	t.num = value();
+	return t;
+}
+
 Name::Name(TokenRef & t) :ASTLeaf(t)
 {
 }
@@ -149,6 +170,12 @@ Name::~Name()
 std::string Name::name()
 {
 	return token()->getText();
+}
+
+Object Name::eval(Enviroment & env)
+{
+	auto it = env.get(name());
+	return it->second;
 }
 
 BinaryExpr::BinaryExpr(std::vector<ASTreeRef>& list):ASTList(list)
@@ -174,8 +201,149 @@ ASTreeRef BinaryExpr::right()
 	return child(2);
 }
 
+Object BinaryExpr::eval(Enviroment & env)
+{
+	auto o = op();
+	if (o == "=")
+	{
+		Object r = right()->eval(env);
+		return computeAssign(env, r);
+	}
+	else
+	{
+		Object l = left()->eval(env);
+		Object r = right()->eval(env);
+		return computeOp(l, o,r);
+	}
+
+	return Object();
+}
+
+Object BinaryExpr::computeAssign(Enviroment & env, Object &r)
+{
+	auto l = left();
+
+	if (l->toString() == "outstream")
+	{
+		if (r.isNum)
+		{
+			if ((int)r.num == r.num)
+			{
+				std::cout << std::to_string((int)r.num);
+			}
+			else
+			{
+				std::cout << std::to_string(r.num);
+			}
+		}
+		else
+		{
+			std::cout << r.text;
+		}
+
+		return r;
+	}
+
+	if (dynamic_cast<Name *>(l.get()))
+	{
+		env.put(dynamic_cast<Name *>(l.get())->name(), r);
+		return r;
+	}
+	else
+	{
+		//todo,为非变量赋值
+	}
+
+	return Object();
+}
+
+Object BinaryExpr::computeOp(Object & l, std::string &op, Object & r)
+{
+	if (l.isNum&&r.isNum)
+	{
+		return computeNumber(l, op, r);
+	}
+	else if(op=="+")
+	{
+		Object t;
+		t.isNum = false;
+
+		std::string t1 = l.isNum ? ((int)l.num==l.num? std::to_string((int)l.num) :std::to_string(l.num) ): l.text;
+		std::string t2 = r.isNum ? ((int)r.num == r.num ? std::to_string((int)r.num) : std::to_string(r.num)) : r.text;
+
+		t.text = t1 + t2;
+
+		return t;
+	}
+	else if(op=="==")
+	{
+		Object t;
+		t.num = (l == r);
+
+		return t;
+	}
+	else
+	{
+		//todo,运行时语法错误
+	}
+
+	return Object();
+}
+
+Object BinaryExpr::computeNumber(Object & l, std::string & op, Object & r)
+{
+	double a = l.num;
+	double b = r.num;
+
+	Object t;
+
+	if (op == "+")
+	{
+		t.num = a + b;
+	}
+	else if (op == "-")
+	{
+		t.num = a - b;
+	}
+	else if (op == "*")
+	{
+		t.num = a * b;
+	}
+	else if (op == "/")
+	{
+		t.num = a/b;//todo，除数不能为0
+	}
+	else if (op == "%")
+	{
+		t.num = (int)a % (int)b;
+	}
+	else if (op == "==")
+	{
+		t.num = (a == b);
+	}
+	else if (op == ">")
+	{
+		t.num = (a > b);
+	}
+	else if (op == "<")
+	{
+		t.num = (a < b);
+	}
+	else
+	{
+		//todo,运行时错误
+	}
+
+	return t;
+}
+
 PrimaryExpr::PrimaryExpr(std::vector<ASTreeRef>& ref):ASTList(ref)
 {
+}
+
+Object PrimaryExpr::eval(Enviroment & env)
+{
+	return Object();
 }
 
 NegativeExpr::NegativeExpr(std::vector<ASTreeRef>& ref) : ASTList(ref)
@@ -192,8 +360,34 @@ std::string NegativeExpr::toString()
 	return "-"+operand()->toString();
 }
 
+Object NegativeExpr::eval(Enviroment & env)
+{
+	Object result=operand()->eval(env);
+
+	if (result.isNum)
+	{
+		result.num=-result.num;
+	}
+
+	return result;
+}
+
 BlockStmnt::BlockStmnt(std::vector<ASTreeRef>& ref) :ASTList(ref)
 {
+}
+
+Object BlockStmnt::eval(Enviroment & env)
+{
+	Object result;
+	for (auto t : data->children)
+	{
+		if (!dynamic_cast<NullStmnt *>(t.get()))
+		{
+			result = t->eval(env);
+		}
+	}
+
+	return result;
 }
 
 IfStmnt::IfStmnt(std::vector<ASTreeRef>& ref) : ASTList(ref)
@@ -228,6 +422,27 @@ std::string IfStmnt::toString()
 	return result;
 }
 
+Object IfStmnt::eval(Enviroment & env)
+{
+	Object c = condition()->eval(env);
+	if (c.isNum&&c.num != 0)
+	{
+		return thenBlock()->eval(env);
+	}
+	else
+	{
+		auto b = elseBlock();
+		if (b.get() == nullptr)
+		{
+			return Object();
+		}
+		
+		return b->eval(env);
+	}
+
+	return Object();
+}
+
 WhileStmnt::WhileStmnt(std::vector<ASTreeRef>& ref) :ASTList(ref)
 {
 }
@@ -247,8 +462,35 @@ std::string WhileStmnt::toString()
 	return  "(while " + condition()->toString() + " " + body()->toString() + ")";
 }
 
+Object WhileStmnt::eval(Enviroment & env)
+{
+	Object t;
+
+	auto s = condition()->toString();
+
+	for (;;)
+	{
+		Object c = condition()->eval(env);
+		if (c.isNum&&c.num == 0)
+		{
+			return t;
+		}
+		else
+		{
+			t = body()->eval(env);
+		}
+	}
+
+	return t;
+}
+
 NullStmnt::NullStmnt(std::vector<ASTreeRef>& ref) :ASTList(ref)
 {
+}
+
+Object NullStmnt::eval(Enviroment & env)
+{
+	return Object();
 }
 
 StringLiteral::StringLiteral(TokenRef t):ASTLeaf(t)
@@ -258,4 +500,35 @@ StringLiteral::StringLiteral(TokenRef t):ASTLeaf(t)
 std::string StringLiteral::value()
 {
 	return data->token->getText();
+}
+
+Object StringLiteral::eval(Enviroment & env)
+{
+	Object t;
+	t.isNum = false;
+	t.text = value();
+	return t;
+}
+
+Enviroment::Enviroment()
+{
+}
+
+void Enviroment::put(std::string& name, Object &value)
+{
+	values[name] = value;
+}
+
+std::map<std::string, Object>::iterator Enviroment::get(std::string &name)
+{
+	auto result= values.find(name);
+	if (result == values.end())
+	{
+		//todo
+	}
+	return result;
+}
+bool Object::operator==(const Object & o)
+{
+	return (isNum==o.isNum)&&(num==o.num)&&(text==o.text);
 }

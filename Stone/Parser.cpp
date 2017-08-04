@@ -317,7 +317,6 @@ void Repeat::parse(Lexer & lexer, std::vector<ASTreeRef>& res)
 		{
 			break;
 		}
-
 	}
 }
 
